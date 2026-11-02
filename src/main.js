@@ -1,4 +1,4 @@
-// 美索不达米亚：河流与圣台 — a walk through a southern Mesopotamian river town (after Ur, about 1900–1750 BCE): its
+// 公元前 2100 年的美索不达米亚 — a walk through a southern Mesopotamian river town (after Ur and Eridu): its
 // ziggurat, courtyard houses and harbour (the Blender scene), on an alluvial plain of date palm groves, reed
 // banks, tamarisks and fields (flora.js). Rendered as 环形废墟 is: everything keeps its own colour, but the
 // light has only two states, lit and in shadow, and where they meet each surface gets a thin band of other hues
