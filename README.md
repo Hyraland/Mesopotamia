@@ -10,7 +10,6 @@
 python3 -m http.server 8000
 ```
 
-然后打开 http://localhost:8000/ 。
 
 ## 操作
 
