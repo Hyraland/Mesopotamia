@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>河流与圣台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;500&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+        "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
+      }
+    }
+  </script>
+  <style>
+    :root { --dark: #3d342a; --light: #fbe9cf; }
+    html, body { margin: 0; height: 100%; background: var(--dark); overflow: hidden; color: var(--light); }
+    canvas { display: block; touch-action: none; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+
+    #intro {
+      position: fixed; inset: 0; display: grid; place-items: center; text-align: center; background: var(--dark);
+      transition: opacity 2s ease, visibility 2s; font-family: 'Noto Sans SC', sans-serif; user-select: none;
+    }
+    #intro.gone { opacity: 0; visibility: hidden; }
+    #intro h1 { font-weight: 300; font-size: clamp(34px, 7vw, 64px); letter-spacing: 0.6em; margin: 0 0 0 0.6em; }
+    #intro .en { font-family: 'Rajdhani', sans-serif; letter-spacing: 0.55em; opacity: 0.7; margin-top: 16px; font-size: 14px; }
+    #intro .go { margin-top: 52px; font-size: 13px; letter-spacing: 0.45em; opacity: 0; transition: opacity 1.2s; }
+    #intro.ready { cursor: pointer; }
+    #intro.ready .go { opacity: 0.8; animation: breathe 3.2s ease-in-out infinite; }
+    #status { margin-top: 52px; font-size: 13px; letter-spacing: 0.3em; opacity: 0.7; min-height: 1em; }
+    #intro.ready #status { display: none; }
+    #intro .credits { position: absolute; left: 0; right: 0; bottom: 18px; font-size: 11px; letter-spacing: 0.08em; opacity: 0.45; }
+    #intro .credits a { color: inherit; }
+    @keyframes breathe { 50% { opacity: 0.3; } }
+
+    #hint, #mode {
+      position: fixed; left: 24px; font-family: 'Noto Sans SC', sans-serif; font-size: 12px; letter-spacing: 0.2em;
+      pointer-events: none; text-shadow: 0 0 6px rgba(40, 28, 16, 0.9);
+    }
+    #hint { bottom: 48px; opacity: 0; transition: opacity 2s; line-height: 2; }
+    #hint.show { opacity: 0.85; }
+    #mode { bottom: 22px; opacity: 0.6; }
+    @media (max-width: 600px) { #hint, #mode { left: 16px; } }
+  </style>
+</head>
+<body>
+  <div id="intro">
+    <div>
+      <h1>河流与圣台</h1>
+      <div class="en">RIVER · AND · SACRED · TERRACE</div>
+      <div id="status">正在加载…</div>
+      <div class="go">点击进入</div>
+    </div>
+    <div class="credits">模型：<a href="https://sketchfab.com/3d-models/gudea-reconstruction-56e13a61114f4a2dac76f87d5257e984" target="_blank" rel="noopener">“Gudea reconstruction” · Daniel Pett</a>，<a href="https://sketchfab.com/3d-models/sheep-5b11b1aedc9a478eb5e2f3adcf0f4e2e" target="_blank" rel="noopener">“Sheep” · DibArts</a>（均为 CC BY 4.0，有改动）</div>
+  </div>
+  <div id="hint">拖动环顾 · WASD 行走 · Shift 奔跑<br />F 飞行（空格 上升 · C 下降）<br />T 换时段 · M 音乐 · 在塔庙顶上按 E 鸟瞰<br />右上角 ··· 更多</div>
+  <div id="mode"></div>
+  <script>
+    // If loading fails (often a stale cached script after an update), say so instead of hanging.
+    const showLoadError = (msg) => {
+      const s = document.getElementById('status');
+      if (s && !document.getElementById('intro').classList.contains('ready')) {
+        s.textContent = '加载出错，请强制刷新（Cmd+Shift+R）· ' + msg;
+      }
+    };
+    addEventListener('error', (e) => showLoadError(e.message || '脚本错误'));
+    addEventListener('unhandledrejection', (e) => showLoadError(String(e.reason?.message || e.reason)));
+  </script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
