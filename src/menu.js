@@ -1,5 +1,5 @@
-// The menu: three dots at the top right; opened, how to walk, the time of day, the music
-// on or off and how loud, and who made what. Clicks on it go no further (not a look round, not the eagle's flight
+// The menu: three dots at the top right; opened, how to walk, the picture (the automatic lowering of the resolution
+// on or off, the frame rate now), the time of day, the music on or off and how loud, and who made what. Clicks on it go no further (not a look round, not the eagle's flight
 // cut short); Esc or a click outside closes it.
 
 const CSS = `
@@ -26,12 +26,13 @@ const CSS = `
 #menuBox button.opt:hover { background: rgba(251,233,207,0.08); }
 #menuBox button.opt.on { background: rgba(251,233,207,0.18); border-color: rgba(251,233,207,0.6); }
 #menuBox input[type=range] { flex: 1; accent-color: #e9b97a; }
+#menuBox .stat { margin-top: 6px; font-size: 12px; opacity: 0.75; font-variant-numeric: tabular-nums; }
 #menuBox .credits { font-size: 12px; line-height: 1.7; opacity: 0.8; }
 #menuBox .credits p { margin: 0 0 6px; }
 #menuBox a { color: inherit; }
 `;
 
-export function createMenu({ times, titles, timeNow, setTime, musicOn, setMusic, volume, setVolume, right = 16 }) {
+export function createMenu({ times, titles, timeNow, setTime, musicOn, setMusic, volume, setVolume, autoOn = () => true, setAuto = () => {}, stats = () => ({ fps: 0, res: 1 }), right = 16 }) {
   const style = document.createElement('style');
   style.textContent = CSS;
   document.head.appendChild(style);
@@ -55,6 +56,9 @@ export function createMenu({ times, titles, timeNow, setTime, musicOn, setMusic,
       <li><b>T</b><span>换时段</span></li>
       <li><b>M</b><span>音乐开关</span></li>
     </ul>
+    <h3>画面</h3>
+    <div class="row"><span style="flex:2">帧率不够时自动降低分辨率</span><button class="opt" data-auto>开</button></div>
+    <div class="stat" data-stats>帧率 —</div>
     <h3>时段</h3>
     <div class="row" data-times>${times.map((n) => `<button class="opt" data-time="${n}">${titles[n]}</button>`).join('')}</div>
     <h3>音乐</h3>
@@ -69,18 +73,33 @@ export function createMenu({ times, titles, timeNow, setTime, musicOn, setMusic,
 
   const timeBtns = [...box.querySelectorAll('[data-time]')];
   const musicBtn = box.querySelector('[data-music]'), vol = box.querySelector('[data-volume]');
+  const autoBtn = box.querySelector('[data-auto]'), statLine = box.querySelector('[data-stats]');
+  // (the frame rate and the resolution drawn now, kept up to date while the menu is open)
+  const showStats = () => {
+    const s = stats();
+    statLine.textContent = `帧率 ${s.fps ? Math.round(s.fps) : '—'} · 渲染分辨率 ${Math.round(s.res * 100)}%`;
+  };
+  let statTimer = 0;
   const show = () => {
     timeBtns.forEach((b) => b.classList.toggle('on', b.dataset.time === timeNow()));
     musicBtn.classList.toggle('on', musicOn());
     musicBtn.textContent = musicOn() ? '开' : '关';
     vol.value = volume();
+    autoBtn.classList.toggle('on', autoOn());
+    autoBtn.textContent = autoOn() ? '开' : '关';
+    showStats();
   };
-  const open = (v) => { box.classList.toggle('open', v); if (v) show(); };
+  const open = (v) => {
+    box.classList.toggle('open', v);
+    clearInterval(statTimer);
+    if (v) { show(); statTimer = setInterval(showStats, 500); }
+  };
   btn.addEventListener('click', () => open(!box.classList.contains('open')));
   // (a button let go of at once: the keys go on walking, Space not pressing it again)
   const done = () => document.activeElement?.blur();
   timeBtns.forEach((b) => b.addEventListener('click', () => { setTime(b.dataset.time); show(); done(); }));
   musicBtn.addEventListener('click', () => { setMusic(!musicOn()); show(); done(); });
+  autoBtn.addEventListener('click', () => { setAuto(!autoOn()); show(); done(); });
   vol.addEventListener('input', () => setVolume(+vol.value));
   vol.addEventListener('change', done);
   btn.addEventListener('click', done);

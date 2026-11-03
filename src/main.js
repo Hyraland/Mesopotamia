@@ -40,6 +40,9 @@ for (const n of TIME_NAMES) if (n !== 'day') stores[n] = await loadTuning({ name
 // (the picture's settings, its resolution and the like, and the walk's, are one for all the times: the day's)
 for (const n of TIME_NAMES) if (n !== 'day') { stores[n].view = structuredClone(stores.day.view); stores[n].walk = structuredClone(stores.day.walk); }
 const tuning = structuredClone(stores[timeName]);
+// (the menu's own choice of the automatic resolution, kept in this browser, over the file's)
+const AUTO_KEY = 'meso.view.auto';
+try { const a = localStorage.getItem(AUTO_KEY); if (a !== null) tuning.view.auto = a === '1'; } catch { /* storage unavailable */ }
 
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -192,6 +195,14 @@ const skySun = new Float32Array([1, 0, 0, 1]);
 // with the pixels), with much room to spare, a little larger again, up to the whole of it. (Each change sizes the
 // buffers anew, a short hitch: so not oftener, and only by more than 2 %)
 let dynScale = 1, ftAvg = 0, ftSince = 0;
+// the frame rate, counted over half a second (the menu shows it)
+let fpsN = 0, fpsMs = 0, fpsNow = 0;
+function countFrame(ms) {
+  fpsN++;
+  if ((fpsMs += ms) < 500) return;
+  fpsNow = (fpsN * 1000) / fpsMs;
+  fpsN = fpsMs = 0;
+}
 function autoScale(ms) {
   const v = tuning.view;
   if (!v.auto) {
@@ -583,11 +594,17 @@ addEventListener('keydown', (e) => {
   music.apply();
   menu.refresh();
 });
-// the menu at the top right (menu.js): how to walk, the time, the music, who made what
+// the menu at the top right (menu.js): how to walk, the picture, the time, the music, who made what
 const menu = createMenu({
   times: TIME_NAMES, titles: TIME_TITLE, timeNow: () => timeName, setTime: (n) => setTime(n),
   musicOn: () => tuning.view.music, setMusic: (v) => { tuning.view.music = v; music.apply(); },
   volume: () => tuning.view.musicVolume, setVolume: (v) => { tuning.view.musicVolume = v; music.apply(); },
+  autoOn: () => tuning.view.auto,
+  setAuto: (v) => {
+    tuning.view.auto = v;
+    try { localStorage.setItem(AUTO_KEY, v ? '1' : '0'); } catch { /* storage unavailable */ }
+  },
+  stats: () => ({ fps: fpsNow, res: tuning.view.scale * dynScale }),
 });
 onTime = () => menu.refresh();
 
@@ -600,6 +617,7 @@ let lastT = performance.now(), frameNo = 0;
 function frame(now) {
   const dt = Math.min((now - lastT) / 1000, 0.05);
   autoScale(now - lastT);
+  countFrame(now - lastT);
   lastT = now;
   draw(dt);
   requestAnimationFrame(frame);
